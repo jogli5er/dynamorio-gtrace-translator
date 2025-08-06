@@ -421,9 +421,14 @@ instrumentation_exit()
         !drmgr_unregister_kernel_xfer_event(event_kernel_xfer) ||
         !drmgr_unregister_bb_app2app_event(event_bb_app2app))
         DR_ASSERT(false);
-#ifdef DELAYED_CHECK_INLINED
-    drx_exit();
+#ifdef LINUX
+    // XXX i#7504: Time and timer scaling currently only supports Linux.
+    if (op_scale_timers.get_value() > 1 || op_scale_timeouts.get_value() > 1) {
+        bool ok = drx_unregister_time_scaling();
+        DR_ASSERT(ok);
+    }
 #endif
+    drx_exit();
     drbbdup_status_t res = drbbdup_exit();
     DR_ASSERT(res == DRBBDUP_SUCCESS);
 }
@@ -476,8 +481,21 @@ instrumentation_init()
     else if (op_L0_filter_until_instrs.get_value())
         tracing_mode.store(BBDUP_MODE_L0_FILTER, std::memory_order_release);
 
-#ifdef DELAYED_CHECK_INLINED
-    drx_init();
+    bool ok = drx_init();
+    DR_ASSERT(ok);
+#ifdef LINUX
+    // XXX i#7504: Time and timer scaling currently only supports Linux.
+    if (op_scale_timers.get_value() > 1 || op_scale_timeouts.get_value() > 1) {
+        drx_time_scale_t scale = {
+            sizeof(scale),
+        };
+        scale.timer_scale = op_scale_timers.get_value();
+        scale.timeout_scale = op_scale_timeouts.get_value();
+        NOTIFY(1, "Registering timer scaling %dx timeout scaling %dx\n",
+               scale.timer_scale, scale.timeout_scale);
+        ok = drx_register_time_scaling(&scale);
+        DR_ASSERT(ok);
+    }
 #endif
 }
 
@@ -520,7 +538,7 @@ event_pre_detach()
 static void
 event_nudge(void *drcontext, uint64 arg)
 {
-    if (arg == TRACER_NUDGE_MEM_DUMP) {
+    if ((arg >> TRACER_NUDGE_TYPE_SHIFT) == TRACER_NUDGE_MEM_DUMP) {
 #ifdef WINDOWS
         /* TODO i#7508: raw2trace fails with "Non-module instructions found with no
          * encoding information.". This occurs on Windows when capturing memory dumps at
@@ -544,7 +562,7 @@ event_nudge(void *drcontext, uint64 arg)
             if (op_split_windows.get_value()) {
                 dr_snprintf(windir, BUFFER_SIZE_ELEMENTS(windir),
                             "%s%s" WINDOW_SUBDIR_FORMAT, logsubdir, DIRSEP,
-                            tracing_window.load(std::memory_order_acquire));
+                            arg & TRACER_NUDGE_VALUE_MASK);
                 NULL_TERMINATE_BUFFER(windir);
                 spec.elf_output_directory = windir;
             }
@@ -824,7 +842,7 @@ insert_mode_comparison(void *drcontext, instrlist_t *ilist, instr_t *where,
             XINST_CREATE_sub(drcontext, opnd_create_reg(reg_mine),
                              opnd_create_reg(reg_global)));
 #elif defined(RISCV64)
-    /* FIXME i#3544: Not implemented */
+    /* XXX i#3544: Not implemented */
     DR_ASSERT_MSG(false, "Not implemented on RISC-V");
 #else
     // Our version of a flags-free reg-reg subtraction: 1's complement one reg
@@ -958,7 +976,7 @@ insert_filter_addr(void *drcontext, instrlist_t *ilist, instr_t *where, user_dat
         // every instr.  We skip if we're still on the same cache line.
         if (ud->last_app_pc != NULL) {
             ptr_uint_t prior_line = ((ptr_uint_t)ud->last_app_pc >> line_bits) & mask;
-            // FIXME i#2439: we simplify and ignore a 2nd cache line touched by an
+            // XXX i#2439: we simplify and ignore a 2nd cache line touched by an
             // instr that straddles cache lines.  However, that is not uncommon on
             // x86 and we should check the L0 cache for both lines, do regular instru
             // if either misses, and have some flag telling the regular instru to
@@ -1327,7 +1345,7 @@ event_app_instruction(void *drcontext, void *tag, instrlist_t *bb, instr_t *inst
 #ifdef X86
     drreg_set_vector_entry(&rvec, DR_REG_XCX, true);
 #elif defined(RISCV64)
-    /* FIXME i#3544: Check if scratch reg can be used here. */
+    /* XXX i#3544: Check if scratch reg can be used here. */
     drreg_set_vector_entry(&rvec, DR_REG_T2, true);
 #else
     for (reg_ptr = DR_REG_R0; reg_ptr <= DR_REG_R7; reg_ptr++)
@@ -2474,7 +2492,7 @@ drmemtrace_client_main(client_id_t id, int argc, const char *argv[])
 #else
         if (!ipc_pipe.open_for_write()) {
             if (GetLastError() == ERROR_PIPE_BUSY) {
-                // FIXME i#1727: add multi-process support to Windows named_pipe_t.
+                // XXX i#1727: add multi-process support to Windows named_pipe_t.
                 FATAL("Fatal error: multi-process applications not yet supported "
                       "for drcachesim on Windows\n");
             } else {

@@ -174,11 +174,14 @@ extern dynamorio::droption::droption_t<int> op_only_thread;
 extern dynamorio::droption::droption_t<std::string> op_only_threads;
 extern dynamorio::droption::droption_t<std::string> op_only_shards;
 extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t> op_skip_instrs;
+extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t> op_skip_records;
 extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t> op_skip_refs;
 extern dynamorio::droption::droption_t<uint64_t> op_skip_to_timestamp;
 extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t> op_warmup_refs;
 extern dynamorio::droption::droption_t<double> op_warmup_fraction;
 extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t> op_sim_refs;
+extern dynamorio::droption::droption_t<dynamorio::droption::bytesize_t>
+    op_exit_after_records;
 extern dynamorio::droption::droption_t<std::string> op_config_file;
 extern dynamorio::droption::droption_t<bool> op_add_noise_generator;
 extern dynamorio::droption::droption_t<unsigned int> op_report_top;
@@ -239,8 +242,12 @@ extern dynamorio::droption::droption_t<std::string> op_filter_func_ids;
 extern dynamorio::droption::droption_t<std::string> op_modify_marker_value;
 extern dynamorio::droption::droption_t<uint64_t> op_trim_before_timestamp;
 extern dynamorio::droption::droption_t<uint64_t> op_trim_after_timestamp;
+extern dynamorio::droption::droption_t<uint64_t> op_trim_before_instr;
+extern dynamorio::droption::droption_t<uint64_t> op_trim_after_instr;
 extern dynamorio::droption::droption_t<bool> op_abort_on_invariant_error;
 extern dynamorio::droption::droption_t<bool> op_pt2ir_best_effort;
+extern dynamorio::droption::droption_t<int> op_scale_timers;
+extern dynamorio::droption::droption_t<int> op_scale_timeouts;
 
 } // namespace drmemtrace
 } // namespace dynamorio
