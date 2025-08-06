@@ -33,9 +33,9 @@
 /* External analysis tool example. */
 
 #include "dr_api.h"
-#include "empty.h"
+#include "champsim_tracer.h"
 
-const std::string champsim_tracer_t::TOOL_NAME = "Empty tool";
+const std::string champsim_tracer_t::TOOL_NAME = "ChampSim Tracer";
 
 analysis_tool_t *
 empty_tool_create(unsigned int verbose)

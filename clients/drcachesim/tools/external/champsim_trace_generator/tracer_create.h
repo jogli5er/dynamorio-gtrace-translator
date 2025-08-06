@@ -30,85 +30,16 @@
  * DAMAGE.
  */
 
-/* External analysis tool example. */
+/* example tool creation */
 
-#include "dr_api.h"
-#include "empty.h"
+#ifndef _EMPTY_CREATE_H_
+#define _EMPTY_CREATE_H_ 1
 
-const std::string champsim_tracer_t::TOOL_NAME = "Empty tool";
+#include "analysis_tool.h"
+
+using dynamorio::drmemtrace::analysis_tool_t;
 
 analysis_tool_t *
-empty_tool_create(unsigned int verbose)
-{
-    return new champsim_tracer_t(verbose);
-}
+empty_tool_create(unsigned int verbose = 0);
 
-champsim_tracer_t::champsim_tracer_t(unsigned int verbose)
-{
-    fprintf(stderr, "Empty tool created\n");
-}
-
-std::string
-champsim_tracer_t::initialize()
-{
-    return std::string("");
-}
-
-champsim_tracer_t::~champsim_tracer_t()
-{
-}
-
-bool
-champsim_tracer_t::parallel_shard_supported()
-{
-    return true;
-}
-
-void *
-champsim_tracer_t::parallel_worker_init(int worker_index)
-{
-    return NULL;
-}
-
-std::string
-champsim_tracer_t::parallel_worker_exit(void *worker_data)
-{
-    return std::string("");
-}
-
-void *
-champsim_tracer_t::parallel_shard_init(int shard_index, void *worker_data)
-{
-    return NULL;
-}
-
-bool
-champsim_tracer_t::parallel_shard_exit(void *shard_data)
-{
-    return true;
-}
-
-bool
-champsim_tracer_t::parallel_shard_memref(void *shard_data, const memref_t &memref)
-{
-    return true;
-}
-
-std::string
-champsim_tracer_t::parallel_shard_error(void *shard_data)
-{
-    return std::string("");
-}
-
-bool
-champsim_tracer_t::process_memref(const memref_t &memref)
-{
-    return true;
-}
-
-bool
-champsim_tracer_t::print_results()
-{
-    fprintf(stderr, "Empty tool results:\n");
-    return true;
-}
+#endif /* _EMPTY_CREATE_H_ */
